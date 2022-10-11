@@ -179,18 +179,25 @@ public:
 
 int main()
 {
-	ForwardList<std::string> names_of_attackers;
-	names_of_attackers.Add("Jon");
-	names_of_attackers.Add("Piter");
+	ForwardList<std::string> names_of_attackers_1;
+	names_of_attackers_1.Add("Williams");
+	names_of_attackers_1.Add("Peters");
 
-	ForwardList<HockeyTeam> hts;
-	hts.Add({ names_of_attackers, "Lover", 4 });
-	hts.Add({ names_of_attackers, "Bigger", 2 });
+	ForwardList<std::string> names_of_attackers_2;
+	names_of_attackers_2.Add("Gibson");
+	names_of_attackers_2.Add("Martin");
 
-	HockeyTeams hts1(hts);
+	ForwardList<HockeyTeam> hockey_teams;
+	hockey_teams.Add({ names_of_attackers_1, "Anaheim Ducks", 3 });
+	hockey_teams.Add({ names_of_attackers_2, "Arizona Coyotes", 5 });
 
-	auto ht = hts1.MostScoringGame();
+	HockeyTeams hockey_teams_handler(hockey_teams);
 
-	std::cout << ht.team_name;
+	auto most_scoring_game = hockey_teams_handler.MostScoringGame();
+	auto team_martin = hockey_teams_handler.SearchByLastName("Martin");
+	auto team_williams = hockey_teams_handler.SearchByLastName("Williams");
 
+	std::cout << "Team with the best stats: " << most_scoring_game.team_name << '\n';
+	std::cout << "Team Martin: " << team_martin->team_name << '\n';
+	std::cout << "Team Williams: " << team_williams->team_name << '\n';
 }
