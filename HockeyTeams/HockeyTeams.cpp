@@ -229,7 +229,7 @@ public:
 
 int main()
 {
-	std::string filename = "HockeyTeams.txt";
+	std::string filename = "HockeyTeams.ht";
 
 	while (true)
 	{
