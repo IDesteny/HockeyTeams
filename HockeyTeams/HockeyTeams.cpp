@@ -170,7 +170,7 @@ public:
 	/*
 	* The method that returns the command with the best statistics
 	*/
-	HockeyTeam &MostScoringGame() const noexcept
+	ForwardList<HockeyTeam>::ForwardListIterator MostScoringGame() const noexcept
 	{
 		auto max_value{ hockey_teams.begin() };
 
@@ -182,7 +182,7 @@ public:
 			}
 		}
 
-		return *max_value;
+		return max_value;
 	}
 
 	/*
@@ -258,11 +258,13 @@ int main()
 
 		switch (cmd)
 		{
+			/* End the program */
 			case 0:
 			{
 				return 0;
 			}
 
+			/* Read data from file */
 			case 1:
 			{
 				std::ifstream is{ filename };
@@ -275,6 +277,7 @@ int main()
 				break;
 			}
 
+			/* Add data */
 			case 2:
 			{
 				HockeyTeams hockey_teams;
@@ -314,6 +317,7 @@ int main()
 				break;
 			}
 
+			/* Delete data */
 			case 3:
 			{
 				HockeyTeams hockey_teams;
@@ -325,6 +329,7 @@ int main()
 				break;
 			}
 
+			/* Find a team by last name */
 			case 4:
 			{
 				HockeyTeams hockey_teams;
@@ -336,10 +341,10 @@ int main()
 
 				auto team = hockey_teams.SearchByLastName(last_name);
 
-				/* If the command is not found */
+				/* If the team is not found */
 				if (team == hockey_teams.GetHockeyTeams().end())
 				{
-					std::cout << "This command is not in the list\n\n";
+					std::cout << "This team is not in the list\n\n";
 					break;
 				}
 
@@ -354,23 +359,31 @@ int main()
 				break;
 			}
 
+			/* Find the most effective team */
 			case 5:
 			{
 				HockeyTeams hockey_teams;
 				hockey_teams.Deserialize(std::fstream{ filename });
 
-				std::cout << "Most Efficient Team:\n";
-
 				auto team = hockey_teams.MostScoringGame();
 
+				/* If the team is not found */
+				if (team == hockey_teams.GetHockeyTeams().end())
+				{
+					std::cout << "This team is not in the list\n\n";
+					break;
+				}
+
+				std::cout << "Most Efficient Team:\n";
+
 				std::cout << "Names of attackers: ";
-				for (auto &&it : team.names_of_attackers)
+				for (auto &&it : team->names_of_attackers)
 				{
 					std::cout << it << ' ';
 				}
 				std::cout << '\n';
-				std::cout << "Team name: " + team.team_name + '\n';
-				std::cout << "Number of goals scored: " + std::to_string(team.number_of_goals_scored) + "\n\n";
+				std::cout << "Team name: " + team->team_name + '\n';
+				std::cout << "Number of goals scored: " + std::to_string(team->number_of_goals_scored) + "\n\n";
 
 				break;
 			}
