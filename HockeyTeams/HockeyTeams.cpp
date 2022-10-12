@@ -1,7 +1,6 @@
 ﻿#include <iostream>
 #include <fstream>
 #include <string>
-#include <sstream>
 
 /*
 * Singly linked template list (container)
@@ -80,13 +79,13 @@ public:
 	}
 
 	/* Add to linked list method */
-	void Add(const T &dt)
+	void Add(const T &dt) noexcept
 	{
 		head = new Node{ dt, head };
 	}
 
 	/* Linked list removal method */
-	void Del()
+	void Del() noexcept
 	{
 		/* If the list is not empty */
 		if (head)
@@ -99,13 +98,13 @@ public:
 	}
 
 	/* Necessary for: range based for loop */
-	ForwardListIterator begin() const
+	ForwardListIterator begin() const noexcept
 	{
 		return head;
 	}
 
 	/* Necessary for: range based for loop */
-	ForwardListIterator end() const
+	ForwardListIterator end() const noexcept
 	{
 		return nullptr;
 	}
@@ -115,7 +114,7 @@ public:
 	* Required to clear the contents of a singly linked list.
 	* Called when an object goes out of scope
 	*/
-	~ForwardList()
+	~ForwardList() noexcept
 	{
 		while (head)
 		{
@@ -186,7 +185,10 @@ public:
 		return *max_value;
 	}
 
-	void Serialize(std::fstream &&file)
+	/*
+	* Serializing data about hockey teams to a file stream
+	*/
+	void Serialize(std::fstream &&file) const noexcept
 	{
 		for (auto &&it : hockey_teams)
 		{
@@ -195,11 +197,15 @@ public:
 				file << it2 + ' ';
 			}
 
+			/* Surnames of the attackers from the rest of the data are separated by a line */
 			file << "| " + it.team_name + ' ' + std::to_string(it.number_of_goals_scored) + '\n';
 		}
 	}
 
-	void Deserialize(std::fstream &&file)
+	/*
+	* Deserializing hockey team data from a file stream
+	*/
+	void Deserialize(std::fstream &&file) noexcept
 	{
 		std::string tmp;
 
@@ -227,10 +233,15 @@ public:
 	}
 };
 
+/*
+* Entry point in program
+*/
 int main()
 {
+	/* Name of the hockey team data file */
 	std::string filename = "HockeyTeams.ht";
 
+	/* The program runs indefinitely unless the user enters the appropriate command. */
 	while (true)
 	{
 		std::cout <<
@@ -324,6 +335,8 @@ int main()
 				std::cin >> last_name;
 
 				auto team = hockey_teams.SearchByLastName(last_name);
+
+				/* If the command is not found */
 				if (team == hockey_teams.GetHockeyTeams().end())
 				{
 					std::cout << "This command is not in the list\n\n";
@@ -362,6 +375,7 @@ int main()
 				break;
 			}
 
+			/* Incorrect input */
 			default:
 			{
 				std::cout << "Unsupported command\n\n";
