@@ -1,4 +1,7 @@
 ﻿#include <iostream>
+#include <fstream>
+#include <string>
+#include <sstream>
 
 /*
 * Singly linked template list (container)
@@ -43,6 +46,11 @@ public:
 		bool operator!=(const ForwardListIterator &forwardListIterator) const noexcept
 		{
 			return node != forwardListIterator.node;
+		}
+
+		bool operator==(const ForwardListIterator &forwardListIterator) const noexcept
+		{
+			return node == forwardListIterator.node;
 		}
 
 		/* Redefining the operator *, in this case, the iterator will be dereferenced */
@@ -133,6 +141,8 @@ class HockeyTeams
 	ForwardList<HockeyTeam> hockey_teams;
 
 public:
+	HockeyTeams() = default;
+
 	HockeyTeams(const ForwardList<HockeyTeam> &hockey_teams) : hockey_teams(hockey_teams) {}
 
 	/*
@@ -161,7 +171,7 @@ public:
 	/*
 	* The method that returns the command with the best statistics
 	*/
-	HockeyTeam &MostScoringGame()
+	HockeyTeam &MostScoringGame() const noexcept
 	{
 		auto max_value{ hockey_teams.begin() };
 
@@ -175,29 +185,187 @@ public:
 
 		return *max_value;
 	}
+
+	void Serialize(std::fstream &&file)
+	{
+		for (auto &&it : hockey_teams)
+		{
+			for (auto &&it2 : it.names_of_attackers)
+			{
+				file << it2 + ' ';
+			}
+
+			file << "| " + it.team_name + ' ' + std::to_string(it.number_of_goals_scored) + '\n';
+		}
+	}
+
+	void Deserialize(std::fstream &&file)
+	{
+		std::string tmp;
+
+		while (file >> tmp)
+		{
+			ForwardList<std::string> names_of_attackers;
+
+			while (tmp != "|")
+			{
+				names_of_attackers.Add(tmp);
+				file >> tmp;
+			}
+
+			HockeyTeam hockey_team{ .names_of_attackers = names_of_attackers };
+			file >> hockey_team.team_name;
+			file >> tmp; hockey_team.number_of_goals_scored = std::stoi(tmp);
+
+			hockey_teams.Add(hockey_team);
+		}
+	}
+
+	ForwardList<HockeyTeam> &GetHockeyTeams() noexcept
+	{
+		return hockey_teams;
+	}
 };
 
 int main()
 {
-	ForwardList<std::string> names_of_attackers_1;
-	names_of_attackers_1.Add("Williams");
-	names_of_attackers_1.Add("Peters");
+	std::string filename = "HockeyTeams.txt";
 
-	ForwardList<std::string> names_of_attackers_2;
-	names_of_attackers_2.Add("Gibson");
-	names_of_attackers_2.Add("Martin");
+	while (true)
+	{
+		std::cout <<
+			"0: End the program\n"
+			"1: Read data from file\n"
+			"2: Add data\n"
+			"3: Delete data\n"
+			"4: Find a team by last name\n"
+			"5: Find the most effective team\n";
 
-	ForwardList<HockeyTeam> hockey_teams;
-	hockey_teams.Add({ names_of_attackers_1, "Anaheim Ducks", 3 });
-	hockey_teams.Add({ names_of_attackers_2, "Arizona Coyotes", 5 });
+		int cmd;
+		std::cout << "\n> ";
+		std::cin >> cmd;
 
-	HockeyTeams hockey_teams_handler(hockey_teams);
+		switch (cmd)
+		{
+			case 0:
+			{
+				return 0;
+			}
 
-	auto most_scoring_game = hockey_teams_handler.MostScoringGame();
-	auto team_martin = hockey_teams_handler.SearchByLastName("Martin");
-	auto team_williams = hockey_teams_handler.SearchByLastName("Williams");
+			case 1:
+			{
+				std::ifstream is{ filename };
+				for (std::string line; std::getline(is, line);)
+				{
+					std::cout << line << '\n';
+				}
+				std::cout << '\n';
 
-	std::cout << "Team with the best stats: " << most_scoring_game.team_name << '\n';
-	std::cout << "Team Martin: " << team_martin->team_name << '\n';
-	std::cout << "Team Williams: " << team_williams->team_name << '\n';
+				break;
+			}
+
+			case 2:
+			{
+				HockeyTeams hockey_teams;
+				hockey_teams.Deserialize(std::fstream{ filename });
+
+				int number_of_attackers;
+				std::cout << "Enter the number of attackers: ";
+				std::cin >> number_of_attackers;
+
+				ForwardList<std::string> names_of_attackers;
+
+				std::cout << "Enter attacker's name:\n";
+				for (auto i{ 0 }; i < number_of_attackers; ++i)
+				{
+					std::cout << std::to_string(i) + ": ";
+
+					std::string attackers_name;
+					std::cin >> attackers_name;
+
+					names_of_attackers.Add(attackers_name);
+				}
+
+				HockeyTeam hockey_team{ .names_of_attackers = names_of_attackers };
+
+				std::cout << "Enter team name: ";
+				std::cin >> hockey_team.team_name;
+
+				std::string number_of_goals_scored;
+				std::cout << "Enter the number of goals scored: ";
+				std::cin >> number_of_goals_scored;
+				std::cout << '\n';
+
+				hockey_team.number_of_goals_scored = std::stoi(number_of_goals_scored);
+
+				hockey_teams.GetHockeyTeams().Add(hockey_team);
+				hockey_teams.Serialize(std::fstream{ filename, std::ofstream::out | std::ofstream::trunc });
+				break;
+			}
+
+			case 3:
+			{
+				HockeyTeams hockey_teams;
+				hockey_teams.Deserialize(std::fstream{ filename });
+
+				hockey_teams.GetHockeyTeams().Del();
+
+				hockey_teams.Serialize(std::fstream{ filename, std::ofstream::out | std::ofstream::trunc });
+				break;
+			}
+
+			case 4:
+			{
+				HockeyTeams hockey_teams;
+				hockey_teams.Deserialize(std::fstream{ filename });
+
+				std::string last_name;
+				std::cout << "Enter the last name of the player whose team you want to find: ";
+				std::cin >> last_name;
+
+				auto team = hockey_teams.SearchByLastName(last_name);
+				if (team == hockey_teams.GetHockeyTeams().end())
+				{
+					std::cout << "This command is not in the list\n\n";
+					break;
+				}
+
+				std::cout << "Names of attackers: ";
+				for (auto &&it : team->names_of_attackers)
+				{
+					std::cout << it << ' ';
+				}
+				std::cout << '\n';
+				std::cout << "Team name: " + team->team_name + '\n';
+				std::cout << "Number of goals scored: " + std::to_string(team->number_of_goals_scored) + "\n\n";
+				break;
+			}
+
+			case 5:
+			{
+				HockeyTeams hockey_teams;
+				hockey_teams.Deserialize(std::fstream{ filename });
+
+				std::cout << "Most Efficient Team:\n";
+
+				auto team = hockey_teams.MostScoringGame();
+
+				std::cout << "Names of attackers: ";
+				for (auto &&it : team.names_of_attackers)
+				{
+					std::cout << it << ' ';
+				}
+				std::cout << '\n';
+				std::cout << "Team name: " + team.team_name + '\n';
+				std::cout << "Number of goals scored: " + std::to_string(team.number_of_goals_scored) + "\n\n";
+
+				break;
+			}
+
+			default:
+			{
+				std::cout << "Unsupported command\n\n";
+			}
+		}
+	}
 }
